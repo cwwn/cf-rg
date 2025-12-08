@@ -1,0 +1,21 @@
+
+services:
+  reader-bridge:
+    build: .
+    container_name: reader-bridge
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    shm_size: '1gb'
+    environment:
+      # === 核心修改：强制 Python 实时打印日志 ===
+      - PYTHONUNBUFFERED=1 
+    # === 增加 Gunicorn 访问日志参数（可选，建议加上）===
+    # 注意：这里覆盖了 Dockerfile 里的 CMD，增加了访问日志输出到控制台
+    command: gunicorn -w 1 --threads 4 --timeout 120 -b 0.0.0.0:5000 --access-logfile - --error-logfile - app:app
+    networks:
+      - book-net
+
+networks:
+  book-net:
+    driver: bridge
