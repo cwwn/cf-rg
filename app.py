@@ -1,4 +1,4 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, redirect, url_for
 from DrissionPage import ChromiumPage, ChromiumOptions
 import threading
 import time
@@ -108,6 +108,19 @@ def proxy():
             except: pass
             page = None
             return f"Proxy Error: {str(e)}", 500
+
+# === 新增代码：捕获所有其他路径，自动重定向回 proxy ===
+@app.route('/<path:subpath>', methods=['GET', 'POST'])
+def catch_all(subpath):
+    # 拼接原始目标网址，假设你是针对 69shuba 的
+    target_url = f"https://www.69shuba.com/{subpath}"
+    
+    # 如果原本带有 URL 参数 (比如 ?page=2)，也补上
+    if request.query_string:
+        target_url += f"?{request.query_string.decode('utf-8')}"
+        
+    # 重定向回 /proxy 接口处理
+    return redirect(url_for('proxy', url=target_url))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
